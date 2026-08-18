@@ -1,0 +1,15 @@
+{
+  "name": "pet-care-platform-backend",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "npm --prefix functions run build",
+    "lint": "npm --prefix functions run lint",
+    "test": "npm --prefix functions test",
+    "emulators": "firebase emulators:start --project volrik-pet-care-platform --only auth,firestore,functions",
+    "emulators:exec": "firebase emulators:exec --project volrik-pet-care-platform --only auth,firestore,functions \"npm test\""
+  }
+}

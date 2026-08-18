@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+functions/node_modules/
+
+# Build and test output
+functions/lib/
+functions/coverage/
+
+# Firebase local state and logs
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.local
+*service-account*.json
+serviceAccountKey.json
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.swp
