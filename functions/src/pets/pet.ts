@@ -5,6 +5,8 @@ export type PetSex = "male" | "female" | "unknown";
 
 export interface Pet {
   birthDate?: Timestamp;
+  breed?: string;
+  countryCode?: string;
   createdAt: Timestamp;
   name: string;
   ownerId: string;

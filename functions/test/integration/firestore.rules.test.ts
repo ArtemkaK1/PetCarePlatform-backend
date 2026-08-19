@@ -10,13 +10,17 @@ import {
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
 import {
+  collection,
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
+  query,
   serverTimestamp,
   setDoc,
   Timestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
 
 const projectId = "volrik-pet-care-platform";
@@ -74,6 +78,26 @@ async function seedUser(uid: string): Promise<void> {
     await setDoc(doc(context.firestore(), "users", uid), {
       uid,
       email: `${uid}@example.com`,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+  });
+}
+
+async function seedContent(
+  id: string,
+  status: "draft" | "published",
+): Promise<void> {
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    const timestamp = Timestamp.fromMillis(1_700_000_000_000);
+    await setDoc(doc(context.firestore(), "content", id), {
+      title: `Demo ${status} content`,
+      shortDescription: "Rules test fixture",
+      type: "article",
+      topics: ["testing"],
+      species: ["dog"],
+      body: "Demo fixture body.",
+      status,
       createdAt: timestamp,
       updatedAt: timestamp,
     });
@@ -212,5 +236,71 @@ void describe("Firestore ownership rules", () => {
 
     const snapshot = await getDoc(doc(database, "pets", petId));
     assert.equal(snapshot.data()?.ownerId, userA);
+  });
+
+  void it("stores optional pet recommendation metadata", async () => {
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    await assertSucceeds(setDoc(doc(database, "pets", petId), {
+      ...validPet(userA),
+      breed: "labrador-retriever",
+      countryCode: "GB",
+    }));
+
+    const snapshot = await getDoc(doc(database, "pets", petId));
+    assert.equal(snapshot.data()?.breed, "labrador-retriever");
+    assert.equal(snapshot.data()?.countryCode, "GB");
+  });
+
+  void it("authenticated user can read published content", async () => {
+    await seedContent("published-content", "published");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    await assertSucceeds(getDoc(doc(database, "content", "published-content")));
+  });
+
+  void it("unauthenticated user cannot read published content", async () => {
+    await seedContent("published-content", "published");
+    const database = testEnvironment.unauthenticatedContext().firestore();
+    await assertFails(getDoc(doc(database, "content", "published-content")));
+  });
+
+  void it("authenticated user cannot directly read draft content", async () => {
+    await seedContent("draft-content", "draft");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    await assertFails(getDoc(doc(database, "content", "draft-content")));
+  });
+
+  void it("published-content query excludes drafts", async () => {
+    await seedContent("published-content", "published");
+    await seedContent("draft-content", "draft");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    const publishedQuery = query(
+      collection(database, "content"),
+      where("status", "==", "published"),
+    );
+    const snapshot = await assertSucceeds(getDocs(publishedQuery));
+
+    assert.deepEqual(snapshot.docs.map((item) => item.id), ["published-content"]);
+  });
+
+  void it("clients cannot create, update, or delete content", async () => {
+    await seedContent("published-content", "published");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    const timestamp = Timestamp.fromMillis(1_700_000_000_000);
+
+    await assertFails(setDoc(doc(database, "content", "client-content"), {
+      title: "Client content",
+      shortDescription: "Must be rejected",
+      type: "article",
+      topics: ["testing"],
+      species: ["dog"],
+      body: "Client body",
+      status: "published",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    }));
+    await assertFails(updateDoc(doc(database, "content", "published-content"), {
+      title: "Changed by client",
+    }));
+    await assertFails(deleteDoc(doc(database, "content", "published-content")));
   });
 });

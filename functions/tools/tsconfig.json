@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "outDir": "../tools-lib",
+    "rootDir": "..",
+    "sourceMap": false
+  },
+  "include": ["../src/content/**/*.ts", "**/*.ts"]
+}

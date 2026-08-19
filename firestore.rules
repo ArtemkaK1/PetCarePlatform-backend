@@ -25,6 +25,8 @@ service cloud.firestore {
           'species',
           'sex',
           'birthDate',
+          'breed',
+          'countryCode',
           'createdAt',
           'updatedAt'
         ]) &&
@@ -34,6 +36,11 @@ service cloud.firestore {
         data.species in ['dog', 'cat', 'other'] &&
         data.sex in ['male', 'female', 'unknown'] &&
         (!data.keys().hasAny(['birthDate']) || data.birthDate is timestamp) &&
+        (!data.keys().hasAny(['breed']) ||
+          (data.breed is string && data.breed.size() > 0)) &&
+        (!data.keys().hasAny(['countryCode']) ||
+          (data.countryCode is string &&
+            data.countryCode.matches('^[A-Z]{2}$'))) &&
         data.createdAt is timestamp &&
         data.updatedAt is timestamp;
     }
@@ -61,6 +68,12 @@ service cloud.firestore {
 
       allow delete: if isAuthenticated() &&
         resource.data.ownerId == request.auth.uid;
+    }
+
+    match /content/{contentId} {
+      allow read: if isAuthenticated() &&
+        resource.data.status == 'published';
+      allow write: if false;
     }
 
     match /{document=**} {

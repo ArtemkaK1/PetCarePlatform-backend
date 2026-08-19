@@ -1,0 +1,143 @@
+[
+  {
+    "id": "demo-cat-window-enrichment",
+    "title": "Demo: Window-side enrichment ideas",
+    "shortDescription": "Demo ideas for creating a calm observation spot for an indoor cat.",
+    "type": "article",
+    "topics": ["enrichment", "home"],
+    "species": ["cat"],
+    "ageGroups": ["adult", "senior"],
+    "body": "This demo article suggests placing a stable resting surface near a secure window and rotating a few familiar toys. It is sample product content, not professional advice.",
+    "status": "published",
+    "createdAt": "2026-01-10T09:00:00.000Z",
+    "updatedAt": "2026-01-10T09:00:00.000Z"
+  },
+  {
+    "id": "demo-checklist-new-cat-home",
+    "title": "Demo: New cat home checklist",
+    "shortDescription": "A simple demo checklist for preparing everyday items before a cat arrives.",
+    "type": "checklist",
+    "topics": ["new-pet", "home"],
+    "species": ["cat"],
+    "ageGroups": ["kitten", "adult"],
+    "checklistItems": [
+      "Choose a quiet settling-in space",
+      "Set out food and water bowls",
+      "Place a litter tray in an accessible spot",
+      "Add a bed, hiding place and a few toys"
+    ],
+    "status": "published",
+    "createdAt": "2026-01-11T09:00:00.000Z",
+    "updatedAt": "2026-01-11T09:00:00.000Z"
+  },
+  {
+    "id": "demo-checklist-new-dog-home",
+    "title": "Demo: New dog home checklist",
+    "shortDescription": "A demo checklist of basic household preparations for a newly arriving dog.",
+    "type": "checklist",
+    "topics": ["new-pet", "home"],
+    "species": ["dog"],
+    "ageGroups": ["puppy", "adult"],
+    "checklistItems": [
+      "Choose a sleeping area",
+      "Set out food and water bowls",
+      "Check gates, doors and reachable household items",
+      "Prepare a lead, identification tag and a few toys"
+    ],
+    "status": "published",
+    "createdAt": "2026-01-12T09:00:00.000Z",
+    "updatedAt": "2026-01-12T09:00:00.000Z"
+  },
+  {
+    "id": "demo-dog-rainy-day-games",
+    "title": "Demo: Rainy-day games for dogs",
+    "shortDescription": "Sample low-key indoor activities for testing dog enrichment filters.",
+    "type": "article",
+    "topics": ["enrichment", "play"],
+    "species": ["dog"],
+    "body": "This demo article lists simple games such as finding a familiar toy, practicing known cues and exploring a cardboard-box trail under supervision. It is not professional advice.",
+    "status": "published",
+    "createdAt": "2026-01-13T09:00:00.000Z",
+    "updatedAt": "2026-01-13T09:00:00.000Z"
+  },
+  {
+    "id": "demo-external-cat-play-video",
+    "title": "Demo: Short cat play session video",
+    "shortDescription": "External demo video metadata for testing cat and play filters.",
+    "type": "video",
+    "topics": ["play", "enrichment"],
+    "species": ["cat"],
+    "externalUrl": "https://example.com/demo/cat-play-session",
+    "status": "published",
+    "createdAt": "2026-01-14T09:00:00.000Z",
+    "updatedAt": "2026-01-14T09:00:00.000Z"
+  },
+  {
+    "id": "demo-external-dog-walk-video",
+    "title": "Demo: Preparing for a dog walk video",
+    "shortDescription": "External demo video metadata about organizing ordinary walk equipment.",
+    "type": "video",
+    "topics": ["routine", "outdoors"],
+    "species": ["dog"],
+    "countryCodes": ["GB", "US"],
+    "externalUrl": "https://example.com/demo/dog-walk-preparation",
+    "status": "published",
+    "createdAt": "2026-01-15T09:00:00.000Z",
+    "updatedAt": "2026-01-15T09:00:00.000Z"
+  },
+  {
+    "id": "demo-mixed-pet-photo-routine",
+    "title": "Demo: A simple pet photo routine",
+    "shortDescription": "Sample content shared across species for testing multi-species discovery.",
+    "type": "article",
+    "topics": ["memories", "routine"],
+    "species": ["dog", "cat", "other"],
+    "body": "This demo article suggests taking an occasional photo in a familiar place and storing it with a short date label. It contains no care or medical guidance.",
+    "status": "published",
+    "createdAt": "2026-01-16T09:00:00.000Z",
+    "updatedAt": "2026-01-16T09:00:00.000Z"
+  },
+  {
+    "id": "demo-pet-sitter-notes-checklist",
+    "title": "Demo: Pet sitter notes checklist",
+    "shortDescription": "A generic demo checklist for organizing household and contact notes.",
+    "type": "checklist",
+    "topics": ["planning", "routine"],
+    "species": ["dog", "cat", "other"],
+    "checklistItems": [
+      "Write down contact details",
+      "Label everyday supplies",
+      "Note the usual household routine",
+      "Confirm access instructions"
+    ],
+    "status": "published",
+    "createdAt": "2026-01-17T09:00:00.000Z",
+    "updatedAt": "2026-01-17T09:00:00.000Z"
+  },
+  {
+    "id": "demo-draft-breed-filter",
+    "title": "Demo draft: Breed filter sample",
+    "shortDescription": "Unpublished demo metadata used to verify that drafts remain private.",
+    "type": "article",
+    "topics": ["discovery", "testing"],
+    "species": ["dog"],
+    "breeds": ["labrador-retriever", "mixed-breed"],
+    "body": "This draft contains placeholder text only and exists to test draft access controls and breed filtering.",
+    "status": "draft",
+    "createdAt": "2026-01-18T09:00:00.000Z",
+    "updatedAt": "2026-01-18T09:00:00.000Z"
+  },
+  {
+    "id": "demo-draft-country-filter-video",
+    "title": "Demo draft: Country filter video",
+    "shortDescription": "Unpublished external video metadata for testing country filtering.",
+    "type": "video",
+    "topics": ["discovery", "testing"],
+    "species": ["cat", "other"],
+    "countryCodes": ["DE", "FR"],
+    "externalUrl": "https://example.com/demo/country-filter-video",
+    "status": "draft",
+    "createdAt": "2026-01-19T09:00:00.000Z",
+    "updatedAt": "2026-01-19T09:00:00.000Z"
+  }
+]
