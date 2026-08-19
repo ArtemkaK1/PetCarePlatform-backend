@@ -4,13 +4,13 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["eslint.config.mjs", "lib/**", "node_modules/**"],
+    ignores: ["eslint.config.mjs", "lib/**", "node_modules/**", "test-lib/**"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
-    files: ["src/**/*.ts"],
+    files: ["src/**/*.ts", "test/**/*.ts"],
     languageOptions: {
       globals: globals.node,
       parserOptions: {

@@ -4,6 +4,7 @@ functions/node_modules/
 
 # Build and test output
 functions/lib/
+functions/test-lib/
 functions/coverage/
 
 # Firebase local state and logs

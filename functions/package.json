@@ -10,7 +10,13 @@
     "clean": "node -e \"require('node:fs').rmSync('lib', { recursive: true, force: true })\"",
     "build": "npm run clean && tsc",
     "lint": "eslint .",
-    "test": "npm run build && node --test \"lib/**/*.test.js\"",
+    "test": "npm run test:unit",
+    "test:compile": "node -e \"require('node:fs').rmSync('test-lib', { recursive: true, force: true })\" && tsc --project test/tsconfig.json",
+    "test:unit:run": "node --test \"test-lib/test/unit/**/*.test.js\"",
+    "test:integration:run": "node --test --test-concurrency=1 \"test-lib/test/integration/**/*.test.js\"",
+    "test:unit": "npm run test:compile && npm run test:unit:run",
+    "test:integration": "npm run test:compile && npm run test:integration:run",
+    "test:all": "npm run test:compile && npm run test:unit:run && npm run test:integration:run",
     "serve": "npm run build && firebase emulators:start --project volrik-pet-care-platform --only functions"
   },
   "dependencies": {
@@ -18,9 +24,11 @@
     "firebase-functions": "7.3.2"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.1",
     "@eslint/js": "10.0.1",
     "@types/node": "22.20.1",
     "eslint": "10.8.1",
+    "firebase": "12.17.1",
     "globals": "17.11.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.67.0"
