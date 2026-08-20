@@ -10,19 +10,34 @@ import {getFirestore, Timestamp} from "firebase-admin/firestore";
 
 import {parseContentFixtures} from "../src/content/content-fixture";
 import type {ContentDocument} from "../src/content/content";
+import {parseGuideFixtures} from "../src/guides/guide-fixture";
+import type {GuideDocument} from "../src/guides/guide";
 import {
   parseSeedArguments,
   resolveSeedTarget,
 } from "../src/content/seed-target";
 
-const fixturePath = resolve(
+const contentFixturePath = resolve(
   __dirname,
   "../../../seed/fixtures/content.json",
 );
+const guideFixturePath = resolve(
+  __dirname,
+  "../../../seed/fixtures/guides.json",
+);
 
-async function loadFixtures(): Promise<ReturnType<typeof parseContentFixtures>> {
-  const source = await readFile(fixturePath, "utf8");
-  return parseContentFixtures(JSON.parse(source) as unknown);
+async function loadFixtures(): Promise<{
+  content: ReturnType<typeof parseContentFixtures>;
+  guides: ReturnType<typeof parseGuideFixtures>;
+}> {
+  const [contentSource, guideSource] = await Promise.all([
+    readFile(contentFixturePath, "utf8"),
+    readFile(guideFixturePath, "utf8"),
+  ]);
+  return {
+    content: parseContentFixtures(JSON.parse(contentSource) as unknown),
+    guides: parseGuideFixtures(JSON.parse(guideSource) as unknown),
+  };
 }
 
 async function main(): Promise<void> {
@@ -52,7 +67,7 @@ async function main(): Promise<void> {
     const database = getFirestore(app);
     const batch = database.batch();
 
-    for (const fixture of fixtures) {
+    for (const fixture of fixtures.content) {
       const {createdAt, id, updatedAt, ...fields} = fixture;
       const document: ContentDocument = {
         ...fields,
@@ -62,12 +77,24 @@ async function main(): Promise<void> {
       batch.set(database.collection("content").doc(id), document);
     }
 
+    for (const fixture of fixtures.guides) {
+      const {createdAt, id, updatedAt, ...fields} = fixture;
+      const document: GuideDocument = {
+        ...fields,
+        id,
+        createdAt: Timestamp.fromDate(new Date(createdAt)),
+        updatedAt: Timestamp.fromDate(new Date(updatedAt)),
+      };
+      batch.set(database.collection("guides").doc(id), document);
+    }
+
     await batch.commit();
     const targetLabel = target.mode === "emulator" ?
       `Firestore emulator at ${String(emulatorHost)}` :
       `remote project ${target.projectId}`;
     process.stdout.write(
-      `Seeded ${String(fixtures.length)} deterministic content fixtures into ${targetLabel}.\n`,
+      `Seeded ${String(fixtures.content.length)} content and ` +
+      `${String(fixtures.guides.length)} guide fixtures into ${targetLabel}.\n`,
     );
   } finally {
     await deleteApp(app);
@@ -76,6 +103,6 @@ async function main(): Promise<void> {
 
 void main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`Content seed aborted: ${message}\n`);
+  process.stderr.write(`Fixture seed aborted: ${message}\n`);
   process.exitCode = 1;
 });

@@ -2,7 +2,7 @@
 
 Firebase backend for the existing `PetCarePlatform` Firebase project (`volrik-pet-care-platform`). It uses strict TypeScript, Node.js 22, Firebase Admin, 2nd-generation Cloud Functions in `europe-west1`, deny-by-default Firestore rules, and the Local Emulator Suite.
 
-The implemented product scope is intentionally limited to authenticated user profiles, user-owned pets, curated demo content, and deterministic metadata-based recommendations.
+The implemented product scope is intentionally limited to authenticated user profiles, user-owned pets, curated demo content, deterministic metadata-based recommendations, and data-driven demo guides.
 
 ## Prerequisites
 
@@ -93,9 +93,34 @@ Authenticated clients can read only documents whose status is `published`. Inten
 
 No composite index is needed for the implemented status-only query, so `firestore.indexes.json` remains empty.
 
-## Demo content seed
+### `guides/{guideId}`
 
-The version-controlled fixture at `seed/fixtures/content.json` contains 10 clearly marked, deterministic demo entries. The entries are product/test samples and do not represent verified medical advice.
+- `id`: stable lowercase kebab-case identifier, equal to the document ID
+- `title`: string
+- `description`: string
+- `species`: nonempty array containing `dog`, `cat`, and/or `other`
+- `ageGroups`: optional string array
+- `topics`: optional string array
+- `questions`: ordered array of questions
+  - `id`: stable identifier within the guide
+  - `prompt`: display text
+  - `options`: ordered array of `{ id, label, score }`
+- `results`: result definitions with `id`, inclusive `minScore`/`maxScore`, `title`, `text`, and `urgency`
+  - `urgency`: `informational | consider_professional_help | urgent_external_help`
+  - `recommendedContentIds`: optional content ID array
+  - `topics`: optional topic array
+  - `suggestClinicRouting`: optional boolean routing hint only
+- `status`: `draft | published`
+- `createdAt`: Firestore timestamp
+- `updatedAt`: Firestore timestamp
+
+Questions and answer options stay in fixture order, so clients can render them directly. Each selected option contributes its fixture-defined integer score. The result whose inclusive score range contains the total is selected. Fixture validation requires unique IDs, complete non-overlapping result ranges, and at least one valid complete answer combination that reaches every result; the pure TypeScript evaluator rejects unknown, duplicate, or missing answers. Species targeting is a separate exact metadata check.
+
+This is deterministic presentation and routing data, not a diagnostic or general-purpose rules engine. Authenticated clients may query only published guides using `where("status", "==", "published")`; drafts and all client writes are denied.
+
+## Demo fixture seed
+
+The version-controlled fixtures at `seed/fixtures/content.json` and `seed/fixtures/guides.json` contain 10 demo content entries and 3 demo guides. Two guides are published and one is a draft for access-control testing. They are product/test samples, make no diagnosis, and do not represent verified medical advice.
 
 Start the Emulator Suite in one terminal:
 
@@ -106,13 +131,13 @@ npm run emulators
 Then run the default seed command in another terminal. It compiles the seed tool, targets the running Firestore emulator at `127.0.0.1:8080`, validates the fixture, and writes deterministic document IDs and timestamps:
 
 ```sh
-npm run seed:content
+npm run seed:fixtures
 ```
 
-Repeated runs overwrite the same 10 document IDs with the same values. Remote writes are disabled by default. The only accepted remote command requires both explicit safety flags and the exact current MVP project ID:
+Repeated runs overwrite the same content and guide document IDs with the same values. The older `npm run seed:content` command remains an alias for this complete fixture seed. Remote writes are disabled by default. The only accepted remote command requires both explicit safety flags and the exact current MVP project ID:
 
 ```sh
-npm --prefix functions run seed:content -- \
+npm --prefix functions run seed:fixtures -- \
   --remote \
   --confirm-remote-seed \
   --project volrik-pet-care-platform
@@ -148,4 +173,4 @@ Results sort by descending score and then ascending content document ID as a sta
 
 ## Security
 
-Firestore rules allow only the ownership and published-content reads described above. Every unspecified path is denied by default. Keep credentials, service-account JSON files, and secrets out of the repository. Local Functions and seed tooling use Application Default Credentials supplied by their environment; deployed Functions use their managed service identity.
+Firestore rules allow only the ownership, published-content, and published-guide reads described above. Every unspecified path is denied by default. Keep credentials, service-account JSON files, and secrets out of the repository. Local Functions and seed tooling use Application Default Credentials supplied by their environment; deployed Functions use their managed service identity.

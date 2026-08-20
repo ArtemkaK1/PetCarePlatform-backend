@@ -12,6 +12,7 @@
     "test:unit": "npm --prefix functions run test:unit",
     "test:integration": "firebase emulators:exec --project volrik-pet-care-platform --only auth,firestore,functions \"npm --prefix functions run test:integration\"",
     "seed:content": "npm --prefix functions run seed:content",
+    "seed:fixtures": "npm --prefix functions run seed:fixtures",
     "emulators": "firebase emulators:start --project volrik-pet-care-platform --only auth,firestore,functions",
     "emulators:exec": "firebase emulators:exec --project volrik-pet-care-platform --only auth,firestore,functions \"npm --prefix functions run test:all\""
   }

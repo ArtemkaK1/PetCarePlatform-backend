@@ -104,6 +104,40 @@ async function seedContent(
   });
 }
 
+async function seedGuide(
+  id: string,
+  status: "draft" | "published",
+): Promise<void> {
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    const timestamp = Timestamp.fromMillis(1_700_000_000_000);
+    await setDoc(doc(context.firestore(), "guides", id), {
+      id,
+      title: `Demo: ${status} guide`,
+      description: "Rules test fixture",
+      species: ["dog"],
+      questions: [{
+        id: "ready",
+        prompt: "Ready?",
+        options: [
+          {id: "no", label: "No", score: 0},
+          {id: "yes", label: "Yes", score: 1},
+        ],
+      }],
+      results: [{
+        id: "result",
+        minScore: 0,
+        maxScore: 1,
+        title: "Demo result",
+        text: "Demo explanatory text.",
+        urgency: "informational",
+      }],
+      status,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+  });
+}
+
 void describe("Firestore ownership rules", () => {
   before(async () => {
     const rules = await readFile(
@@ -302,5 +336,58 @@ void describe("Firestore ownership rules", () => {
       title: "Changed by client",
     }));
     await assertFails(deleteDoc(doc(database, "content", "published-content")));
+  });
+
+  void it("authenticated user can read published guides", async () => {
+    await seedGuide("published-guide", "published");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    await assertSucceeds(getDoc(doc(database, "guides", "published-guide")));
+  });
+
+  void it("unauthenticated user cannot read published guides", async () => {
+    await seedGuide("published-guide", "published");
+    const database = testEnvironment.unauthenticatedContext().firestore();
+    await assertFails(getDoc(doc(database, "guides", "published-guide")));
+  });
+
+  void it("draft guides are unavailable to ordinary clients", async () => {
+    await seedGuide("draft-guide", "draft");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    await assertFails(getDoc(doc(database, "guides", "draft-guide")));
+  });
+
+  void it("published-guide query excludes drafts", async () => {
+    await seedGuide("published-guide", "published");
+    await seedGuide("draft-guide", "draft");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    const publishedQuery = query(
+      collection(database, "guides"),
+      where("status", "==", "published"),
+    );
+    const snapshot = await assertSucceeds(getDocs(publishedQuery));
+
+    assert.deepEqual(snapshot.docs.map((item) => item.id), ["published-guide"]);
+  });
+
+  void it("clients cannot create, update, or delete guides", async () => {
+    await seedGuide("published-guide", "published");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    const timestamp = Timestamp.fromMillis(1_700_000_000_000);
+
+    await assertFails(setDoc(doc(database, "guides", "client-guide"), {
+      id: "client-guide",
+      title: "Client guide",
+      description: "Must be rejected",
+      species: ["dog"],
+      questions: [],
+      results: [],
+      status: "published",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    }));
+    await assertFails(updateDoc(doc(database, "guides", "published-guide"), {
+      title: "Changed by client",
+    }));
+    await assertFails(deleteDoc(doc(database, "guides", "published-guide")));
   });
 });

@@ -1,0 +1,201 @@
+[
+  {
+    "id": "demo-behaviour-observation-check",
+    "title": "Demo: Behaviour observation check",
+    "description": "A non-diagnostic check for deciding whether to keep observing, seek routine support, or get immediate external help when safety is at risk.",
+    "species": ["dog", "cat"],
+    "topics": ["behaviour", "observation", "safety"],
+    "questions": [
+      {
+        "id": "immediate-safety",
+        "prompt": "Is a person or animal in immediate danger right now?",
+        "options": [
+          {"id": "no", "label": "No", "score": 0},
+          {"id": "yes", "label": "Yes", "score": 6}
+        ]
+      },
+      {
+        "id": "routine-impact",
+        "prompt": "Is the observed behaviour repeatedly disrupting normal routines?",
+        "options": [
+          {"id": "not-repeatedly", "label": "Not repeatedly", "score": 0},
+          {"id": "sometimes", "label": "Sometimes", "score": 3},
+          {"id": "frequently", "label": "Frequently", "score": 5}
+        ]
+      }
+    ],
+    "results": [
+      {
+        "id": "continue-observing",
+        "minScore": 0,
+        "maxScore": 2,
+        "title": "Continue calm observation",
+        "text": "Keep brief notes about context and routine. This demo result does not identify a cause or condition.",
+        "urgency": "informational",
+        "topics": ["behaviour", "observation"]
+      },
+      {
+        "id": "seek-routine-support",
+        "minScore": 3,
+        "maxScore": 5,
+        "title": "Consider professional support",
+        "text": "Consider discussing the repeated pattern with a qualified animal-care professional. This check is not a diagnosis.",
+        "urgency": "consider_professional_help",
+        "topics": ["behaviour"]
+      },
+      {
+        "id": "prioritise-immediate-safety",
+        "minScore": 6,
+        "maxScore": 11,
+        "title": "Prioritise immediate safety",
+        "text": "Move people and animals to safety when possible and contact an appropriate local emergency or animal-care service. This result does not identify a cause.",
+        "urgency": "urgent_external_help",
+        "topics": ["safety"],
+        "suggestClinicRouting": true
+      }
+    ],
+    "status": "published",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "demo-grooming-routine-check",
+    "title": "Demo: Grooming routine check",
+    "description": "A draft planning check for a calm, gradual dog or cat grooming routine.",
+    "species": ["dog", "cat"],
+    "ageGroups": ["adult", "senior"],
+    "topics": ["grooming", "routine"],
+    "questions": [
+      {
+        "id": "pet-comfort",
+        "prompt": "How comfortable is the pet with brief handling?",
+        "options": [
+          {"id": "comfortable", "label": "Comfortable", "score": 0},
+          {"id": "unsure", "label": "Unsure", "score": 1},
+          {"id": "avoidant", "label": "Avoidant", "score": 2}
+        ]
+      },
+      {
+        "id": "routine-familiarity",
+        "prompt": "How familiar is the household with the planned grooming task?",
+        "options": [
+          {"id": "familiar", "label": "Familiar", "score": 0},
+          {"id": "some-practice", "label": "Some practice", "score": 1},
+          {"id": "new-task", "label": "Completely new", "score": 2}
+        ]
+      },
+      {
+        "id": "supplies-ready",
+        "prompt": "Are suitable basic supplies ready before starting?",
+        "options": [
+          {"id": "ready", "label": "Yes", "score": 0},
+          {"id": "partly-ready", "label": "Partly", "score": 1},
+          {"id": "not-ready", "label": "Not yet", "score": 2}
+        ]
+      }
+    ],
+    "results": [
+      {
+        "id": "start-short-routine",
+        "minScore": 0,
+        "maxScore": 2,
+        "title": "Start with a short routine",
+        "text": "Keep the first session brief and calm, then note what worked for the next routine.",
+        "urgency": "informational",
+        "topics": ["grooming", "routine"]
+      },
+      {
+        "id": "prepare-gradually",
+        "minScore": 3,
+        "maxScore": 4,
+        "title": "Prepare in smaller steps",
+        "text": "Gather supplies and introduce one small part of the routine at a time.",
+        "urgency": "informational",
+        "topics": ["grooming"]
+      },
+      {
+        "id": "consider-grooming-support",
+        "minScore": 5,
+        "maxScore": 6,
+        "title": "Consider qualified grooming support",
+        "text": "Consider asking a qualified groomer or animal-care professional for practical, non-diagnostic support.",
+        "urgency": "consider_professional_help",
+        "topics": ["grooming"],
+        "suggestClinicRouting": false
+      }
+    ],
+    "status": "draft",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "demo-pet-home-readiness",
+    "title": "Demo: Pet home readiness",
+    "description": "A simple onboarding checklist for preparing household basics before a pet arrives.",
+    "species": ["dog", "cat", "other"],
+    "topics": ["onboarding", "home", "routine"],
+    "questions": [
+      {
+        "id": "safe-space",
+        "prompt": "Is a quiet, pet-appropriate space prepared?",
+        "options": [
+          {"id": "not-started", "label": "Not started", "score": 0},
+          {"id": "in-progress", "label": "In progress", "score": 1},
+          {"id": "ready", "label": "Ready", "score": 2}
+        ]
+      },
+      {
+        "id": "basic-supplies",
+        "prompt": "Are species-appropriate basic supplies available?",
+        "options": [
+          {"id": "not-started", "label": "Not started", "score": 0},
+          {"id": "in-progress", "label": "Some are ready", "score": 1},
+          {"id": "ready", "label": "Ready", "score": 2}
+        ]
+      },
+      {
+        "id": "first-week-routine",
+        "prompt": "Has the household agreed on a simple first-week routine?",
+        "options": [
+          {"id": "not-started", "label": "Not started", "score": 0},
+          {"id": "in-progress", "label": "Being discussed", "score": 1},
+          {"id": "ready", "label": "Agreed", "score": 2}
+        ]
+      }
+    ],
+    "results": [
+      {
+        "id": "build-the-basics",
+        "minScore": 0,
+        "maxScore": 2,
+        "title": "Build the basics first",
+        "text": "Choose one preparation step at a time before the planned arrival.",
+        "urgency": "informational",
+        "recommendedContentIds": ["demo-checklist-new-cat-home", "demo-checklist-new-dog-home"],
+        "topics": ["onboarding", "home"]
+      },
+      {
+        "id": "finish-the-plan",
+        "minScore": 3,
+        "maxScore": 4,
+        "title": "Finish the remaining plan",
+        "text": "Most basics are underway. Complete the remaining items and keep the first routine simple.",
+        "urgency": "informational",
+        "recommendedContentIds": ["demo-pet-sitter-notes-checklist"],
+        "topics": ["onboarding", "routine"]
+      },
+      {
+        "id": "ready-for-a-simple-start",
+        "minScore": 5,
+        "maxScore": 6,
+        "title": "Ready for a simple start",
+        "text": "The basic plan is in place. Keep expectations flexible as the pet settles in.",
+        "urgency": "informational",
+        "topics": ["onboarding"]
+      }
+    ],
+    "status": "published",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+]

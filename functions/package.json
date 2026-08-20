@@ -20,6 +20,7 @@
     "seed:compile": "node -e \"require('node:fs').rmSync('tools-lib', { recursive: true, force: true })\" && tsc --project tools/tsconfig.json",
     "seed:content:run": "node tools-lib/tools/seed-content.js",
     "seed:content": "npm run seed:compile && npm run seed:content:run --",
+    "seed:fixtures": "npm run seed:content --",
     "serve": "npm run build && firebase emulators:start --project volrik-pet-care-platform --only functions"
   },
   "dependencies": {
