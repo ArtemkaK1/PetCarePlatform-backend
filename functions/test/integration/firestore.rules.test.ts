@@ -58,14 +58,56 @@ function validPet(ownerId: string): Record<string, unknown> {
   };
 }
 
-async function seedPet(ownerId = userA): Promise<void> {
+async function seedPetDocument(id: string, ownerId: string): Promise<void> {
   await testEnvironment.withSecurityRulesDisabled(async (context) => {
     const timestamp = Timestamp.fromMillis(1_700_000_000_000);
-    await setDoc(doc(context.firestore(), "pets", petId), {
+    await setDoc(doc(context.firestore(), "pets", id), {
       ownerId,
       name: "Milo",
       species: "dog",
       sex: "male",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+  });
+}
+
+async function seedPet(ownerId = userA): Promise<void> {
+  await seedPetDocument(petId, ownerId);
+}
+
+function validCareTask(
+  ownerId: string,
+  referencedPetId = petId,
+): Record<string, unknown> {
+  return {
+    ownerId,
+    petId: referencedPetId,
+    title: "Evening meal",
+    category: "feeding",
+    dueAt: Timestamp.fromMillis(1_800_000_000_000),
+    status: "active",
+    source: "user",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+}
+
+async function seedCareTask(
+  id: string,
+  ownerId = userA,
+  referencedPetId = petId,
+): Promise<void> {
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    const timestamp = Timestamp.fromMillis(1_700_000_000_000);
+    await setDoc(doc(context.firestore(), "careTasks", id), {
+      ownerId,
+      petId: referencedPetId,
+      title: "Evening meal",
+      category: "feeding",
+      dueAt: Timestamp.fromMillis(1_800_000_000_000),
+      status: "active",
+      source: "user",
       createdAt: timestamp,
       updatedAt: timestamp,
     });
@@ -246,6 +288,104 @@ void describe("Firestore ownership rules", () => {
     await seedPet();
     const database = testEnvironment.authenticatedContext(userB).firestore();
     await assertFails(deleteDoc(doc(database, "pets", petId)));
+  });
+
+  void it("user can create, list, read, update, and delete an own care task", async () => {
+    await seedPet();
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    const task = doc(database, "careTasks", "task-a");
+
+    await assertSucceeds(setDoc(task, validCareTask(userA)));
+    const created = await assertSucceeds(getDoc(task));
+    assert.equal(created.data()?.ownerId, userA);
+
+    const ownTasks = query(
+      collection(database, "careTasks"),
+      where("ownerId", "==", userA),
+    );
+    const taskList = await assertSucceeds(getDocs(ownTasks));
+    assert.deepEqual(taskList.docs.map((item) => item.id), ["task-a"]);
+
+    await assertSucceeds(updateDoc(task, {
+      note: "Use the regular portion",
+      status: "completed",
+      updatedAt: serverTimestamp(),
+    }));
+    await assertSucceeds(deleteDoc(task));
+  });
+
+  void it("cross-user care-task access fails", async () => {
+    await seedPet();
+    await seedCareTask("task-a");
+    const database = testEnvironment.authenticatedContext(userB).firestore();
+    const task = doc(database, "careTasks", "task-a");
+
+    await assertFails(getDoc(task));
+    await assertFails(updateDoc(task, {
+      title: "Changed by another user",
+      updatedAt: serverTimestamp(),
+    }));
+    await assertFails(deleteDoc(task));
+  });
+
+  void it("unauthenticated care-task access fails", async () => {
+    await seedPet();
+    await seedCareTask("task-a");
+    const database = testEnvironment.unauthenticatedContext().firestore();
+
+    await assertFails(getDoc(doc(database, "careTasks", "task-a")));
+  });
+
+  void it("care task cannot reference another user's pet", async () => {
+    await seedPetDocument("pet-b", userB);
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+
+    await assertFails(setDoc(
+      doc(database, "careTasks", "task-a"),
+      validCareTask(userA, "pet-b"),
+    ));
+  });
+
+  void it("care-task ownership fields cannot be reassigned", async () => {
+    await seedPet();
+    await seedPetDocument("pet-a-second", userA);
+    await seedCareTask("task-a");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    const task = doc(database, "careTasks", "task-a");
+
+    await assertFails(updateDoc(task, {
+      ownerId: userB,
+      updatedAt: serverTimestamp(),
+    }));
+    await assertFails(updateDoc(task, {
+      petId: "pet-a-second",
+      updatedAt: serverTimestamp(),
+    }));
+  });
+
+  void it("accepts supported recurrence and rejects invalid task schemas", async () => {
+    await seedPet();
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    const recurringTask = {
+      ...validCareTask(userA),
+      dueAt: undefined,
+      nextDueAt: Timestamp.fromMillis(1_800_000_000_000),
+      recurrence: {frequency: "weekly", interval: 2},
+    };
+    delete recurringTask.dueAt;
+
+    await assertSucceeds(setDoc(
+      doc(database, "careTasks", "recurring-task"),
+      recurringTask,
+    ));
+    await assertFails(setDoc(doc(database, "careTasks", "bad-recurrence"), {
+      ...recurringTask,
+      recurrence: {frequency: "yearly", interval: 1},
+    }));
+    await assertFails(setDoc(doc(database, "careTasks", "unknown-field"), {
+      ...validCareTask(userA),
+      notificationEnabled: true,
+    }));
   });
 
   void it("11. user A can read own user profile", async () => {

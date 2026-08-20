@@ -2,7 +2,7 @@
 
 Firebase backend for the existing `PetCarePlatform` Firebase project (`volrik-pet-care-platform`). It uses strict TypeScript, Node.js 22, Firebase Admin, 2nd-generation Cloud Functions in `europe-west1`, deny-by-default Firestore rules, and the Local Emulator Suite.
 
-The implemented product scope is intentionally limited to authenticated user profiles, user-owned pets, curated demo content and clinics, deterministic metadata-based recommendations, and data-driven demo guides.
+The implemented product scope is intentionally limited to authenticated user profiles, user-owned pets and care tasks, curated demo content and clinics, deterministic metadata-based recommendations, and data-driven demo guides.
 
 ## Prerequisites
 
@@ -71,6 +71,29 @@ The authenticated `ensureUserProfile` callable derives `uid` and `email` only fr
 - `updatedAt`: Firestore timestamp
 
 Pet CRUD uses the Firestore client SDK directly. On creation, clients must set `ownerId` to the authenticated user's UID and use Firestore server timestamps for `createdAt` and `updatedAt`. Updates must preserve `ownerId` and `createdAt` and set `updatedAt` with a server timestamp. Only the owner can create, read, update, or delete a pet; unexpected fields are rejected.
+
+### `careTasks/{taskId}`
+
+- `ownerId`: authenticated owner's UID
+- `petId`: referenced owned pet document ID
+- `title`: nonempty string, at most 200 characters
+- `note`: optional string, at most 2,000 characters
+- `category`: `appointment | exercise | feeding | grooming | medication | other`
+- `dueAt`: Firestore timestamp for a one-time task
+- `nextDueAt`: Firestore timestamp for a recurring task
+- `recurrence`: optional `{ frequency, interval }`
+  - `frequency`: `daily | weekly | monthly`
+  - `interval`: integer from 1 through 12
+- `status`: `active | completed | archived`
+- `source`: `user | system_suggestion`
+- `createdAt`: Firestore timestamp
+- `updatedAt`: Firestore timestamp
+
+A task has exactly one schedule shape: one-time tasks use `dueAt` without `recurrence`; recurring tasks use `nextDueAt` with `recurrence`. Creation verifies that `pets/{petId}` belongs to the authenticated user. `ownerId`, `petId`, `source`, and `createdAt` are immutable. Direct reads re-check current pet ownership, while list queries must constrain `ownerId` to the authenticated UID; this is safe because the pet link is validated on creation and cannot be reassigned.
+
+The shared UTC recurrence calculator advances daily and weekly tasks by calendar days. Monthly calculation preserves the UTC time and clamps the day to the target month's final day—for example, January 31 becomes February 28 in a non-leap year. It calculates one next occurrence only; there is no calendar engine, notification system, or background scheduler.
+
+`system_suggestion` records are provenance metadata only. No suggestion fixtures are added in this milestone, and a user remains responsible for choosing whether a suggestion becomes an active task.
 
 ### `content/{contentId}`
 
@@ -202,4 +225,4 @@ Results sort by descending score and then ascending content document ID as a sta
 
 ## Security
 
-Firestore rules allow only the ownership, published-content, published-guide, and published-clinic reads described above. Every unspecified path is denied by default. Keep credentials, service-account JSON files, and secrets out of the repository. Local Functions and seed tooling use Application Default Credentials supplied by their environment; deployed Functions use their managed service identity.
+Firestore rules allow only the ownership, care-task, published-content, published-guide, and published-clinic access described above. Every unspecified path is denied by default. Keep credentials, service-account JSON files, and secrets out of the repository. Local Functions and seed tooling use Application Default Credentials supplied by their environment; deployed Functions use their managed service identity.

@@ -45,6 +45,82 @@ service cloud.firestore {
         data.updatedAt is timestamp;
     }
 
+    function ownsPet(petId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/pets/$(petId)) &&
+        get(/databases/$(database)/documents/pets/$(petId)).data.ownerId ==
+          request.auth.uid;
+    }
+
+    function hasValidCareTaskRecurrence(data) {
+      return data.recurrence is map &&
+        data.recurrence.keys().hasAll(['frequency', 'interval']) &&
+        data.recurrence.keys().hasOnly(['frequency', 'interval']) &&
+        data.recurrence.frequency in ['daily', 'weekly', 'monthly'] &&
+        data.recurrence.interval is int &&
+        data.recurrence.interval >= 1 &&
+        data.recurrence.interval <= 12;
+    }
+
+    function hasValidCareTaskSchedule(data) {
+      return (!data.keys().hasAny(['recurrence']) &&
+          data.keys().hasAny(['dueAt']) &&
+          !data.keys().hasAny(['nextDueAt']) &&
+          data.dueAt is timestamp) ||
+        (data.keys().hasAny(['recurrence']) &&
+          !data.keys().hasAny(['dueAt']) &&
+          data.keys().hasAny(['nextDueAt']) &&
+          data.nextDueAt is timestamp &&
+          hasValidCareTaskRecurrence(data));
+    }
+
+    function hasValidCareTaskFields(data) {
+      return data.keys().hasAll([
+          'ownerId',
+          'petId',
+          'title',
+          'category',
+          'status',
+          'source',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId',
+          'petId',
+          'title',
+          'note',
+          'category',
+          'dueAt',
+          'nextDueAt',
+          'recurrence',
+          'status',
+          'source',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.ownerId is string &&
+        data.petId is string &&
+        data.title is string &&
+        data.title.size() > 0 &&
+        data.title.size() <= 200 &&
+        (!data.keys().hasAny(['note']) ||
+          (data.note is string && data.note.size() <= 2000)) &&
+        data.category in [
+          'appointment',
+          'exercise',
+          'feeding',
+          'grooming',
+          'medication',
+          'other'
+        ] &&
+        data.status in ['active', 'completed', 'archived'] &&
+        data.source in ['user', 'system_suggestion'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp &&
+        hasValidCareTaskSchedule(data);
+    }
+
     match /users/{uid} {
       allow get: if isCurrentUser(uid);
     }
@@ -68,6 +144,36 @@ service cloud.firestore {
 
       allow delete: if isAuthenticated() &&
         resource.data.ownerId == request.auth.uid;
+    }
+
+    match /careTasks/{taskId} {
+      allow create: if isAuthenticated() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        ownsPet(request.resource.data.petId) &&
+        hasValidCareTaskFields(request.resource.data) &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time;
+
+      allow get: if isAuthenticated() &&
+        resource.data.ownerId == request.auth.uid &&
+        ownsPet(resource.data.petId);
+
+      allow list: if isAuthenticated() &&
+        resource.data.ownerId == request.auth.uid;
+
+      allow update: if isAuthenticated() &&
+        resource.data.ownerId == request.auth.uid &&
+        ownsPet(resource.data.petId) &&
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.petId == resource.data.petId &&
+        request.resource.data.source == resource.data.source &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.updatedAt == request.time &&
+        hasValidCareTaskFields(request.resource.data);
+
+      allow delete: if isAuthenticated() &&
+        resource.data.ownerId == request.auth.uid &&
+        ownsPet(resource.data.petId);
     }
 
     match /content/{contentId} {
