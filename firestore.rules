@@ -82,6 +82,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /clinics/{clinicId} {
+      allow read: if isAuthenticated() &&
+        resource.data.status == 'published';
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

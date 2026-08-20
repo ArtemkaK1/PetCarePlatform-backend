@@ -2,7 +2,7 @@
 
 Firebase backend for the existing `PetCarePlatform` Firebase project (`volrik-pet-care-platform`). It uses strict TypeScript, Node.js 22, Firebase Admin, 2nd-generation Cloud Functions in `europe-west1`, deny-by-default Firestore rules, and the Local Emulator Suite.
 
-The implemented product scope is intentionally limited to authenticated user profiles, user-owned pets, curated demo content, deterministic metadata-based recommendations, and data-driven demo guides.
+The implemented product scope is intentionally limited to authenticated user profiles, user-owned pets, curated demo content and clinics, deterministic metadata-based recommendations, and data-driven demo guides.
 
 ## Prerequisites
 
@@ -91,7 +91,7 @@ Pet CRUD uses the Firestore client SDK directly. On creation, clients must set `
 
 Authenticated clients can read only documents whose status is `published`. Intended collection queries must include `where("status", "==", "published")`. Drafts are not client-readable, and every client content write is denied. Curated backend tooling writes through the Admin SDK.
 
-No composite index is needed for the implemented status-only query, so `firestore.indexes.json` remains empty.
+No composite index is needed for the implemented content query.
 
 ### `guides/{guideId}`
 
@@ -118,9 +118,38 @@ Questions and answer options stay in fixture order, so clients can render them d
 
 This is deterministic presentation and routing data, not a diagnostic or general-purpose rules engine. Authenticated clients may query only published guides using `where("status", "==", "published")`; drafts and all client writes are denied.
 
+### `clinics/{clinicId}`
+
+- `name`: string
+- `countryCode`: uppercase ISO alpha-2 code
+- `city`: string
+- `address`: string
+- `latitude` and `longitude`: optional numeric pair
+- `websiteUrl`: optional HTTPS URL
+- `bookingUrl`: optional HTTPS URL
+- `phone`: optional string
+- `tags`: nonempty normalized string array
+- `services`: nonempty normalized string array
+- `emergency`: optional boolean routing metadata
+- `status`: `published | hidden`
+- `createdAt`: Firestore timestamp
+- `updatedAt`: Firestore timestamp
+
+Clinics are curated directory records, not users, accounts, partners, or statements of real-time availability. Authenticated clients can read only published records and cannot write the collection. Every permitted collection query must constrain `status` to `published`. The supported simple filters add one of the following:
+
+```ts
+where("countryCode", "==", countryCode)
+where("city", "==", city)
+where("tags", "array-contains", tag)
+```
+
+Country and city comparisons are exact; fixture tags use normalized kebab-case values. These query shapes rely on Firestore's automatic indexes/index merging, so no composite index was added. Multi-filter search, case-insensitive search, geographic radius filtering, and distance sorting are deferred. Latitude and longitude are presentation/routing metadata only; no geo-search infrastructure is included.
+
+Guide results may set `suggestClinicRouting`, but they do not hardcode clinic IDs or make partnership, booking, or medical claims.
+
 ## Demo fixture seed
 
-The version-controlled fixtures at `seed/fixtures/content.json` and `seed/fixtures/guides.json` contain 10 demo content entries and 3 demo guides. Two guides are published and one is a draft for access-control testing. They are product/test samples, make no diagnosis, and do not represent verified medical advice.
+The version-controlled fixtures at `seed/fixtures/content.json`, `seed/fixtures/guides.json`, and `seed/fixtures/clinics.json` contain 10 demo content entries, 3 demo guides, and 5 demo clinics. Four clinics are published and one is hidden for access-control testing. The clinic records use fictional names, demo addresses, and reserved `.invalid` URLs; they do not identify real clinics or claim partnerships. All fixtures are product/test samples, make no diagnosis, and do not represent verified medical advice.
 
 Start the Emulator Suite in one terminal:
 
@@ -134,7 +163,7 @@ Then run the default seed command in another terminal. It compiles the seed tool
 npm run seed:fixtures
 ```
 
-Repeated runs overwrite the same content and guide document IDs with the same values. The older `npm run seed:content` command remains an alias for this complete fixture seed. Remote writes are disabled by default. The only accepted remote command requires both explicit safety flags and the exact current MVP project ID:
+Repeated runs overwrite the same clinic, content, and guide document IDs with the same values. The older `npm run seed:content` command remains an alias for this complete fixture seed. Remote writes are disabled by default. The only accepted remote command requires both explicit safety flags and the exact current MVP project ID:
 
 ```sh
 npm --prefix functions run seed:fixtures -- \
@@ -173,4 +202,4 @@ Results sort by descending score and then ascending content document ID as a sta
 
 ## Security
 
-Firestore rules allow only the ownership, published-content, and published-guide reads described above. Every unspecified path is denied by default. Keep credentials, service-account JSON files, and secrets out of the repository. Local Functions and seed tooling use Application Default Credentials supplied by their environment; deployed Functions use their managed service identity.
+Firestore rules allow only the ownership, published-content, published-guide, and published-clinic reads described above. Every unspecified path is denied by default. Keep credentials, service-account JSON files, and secrets out of the repository. Local Functions and seed tooling use Application Default Credentials supplied by their environment; deployed Functions use their managed service identity.

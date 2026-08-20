@@ -1,0 +1,72 @@
+[
+  {
+    "id": "demo-clinic-central-paws",
+    "name": "Demo Clinic: Central Paws",
+    "countryCode": "GB",
+    "city": "Demo City",
+    "address": "1 Example Street (demo only)",
+    "latitude": 0,
+    "longitude": 0,
+    "websiteUrl": "https://central-paws.example.invalid",
+    "phone": "+44 0000 000001",
+    "tags": ["cats", "dogs", "general-care"],
+    "services": ["routine-consultations", "basic-checks"],
+    "emergency": false,
+    "status": "published",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "demo-clinic-hidden-preview",
+    "name": "Demo Clinic: Hidden Preview",
+    "countryCode": "GB",
+    "city": "Demo City",
+    "address": "99 Internal Preview Road (demo only)",
+    "tags": ["cats", "dogs", "preview"],
+    "services": ["routine-consultations"],
+    "status": "hidden",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "demo-clinic-night-owl",
+    "name": "Demo Clinic: Night Owl",
+    "countryCode": "GB",
+    "city": "Demo City",
+    "address": "2 Sample Avenue (demo only)",
+    "bookingUrl": "https://night-owl.example.invalid/demo-booking",
+    "phone": "+44 0000 000002",
+    "tags": ["cats", "dogs", "urgent-support"],
+    "services": ["after-hours-contact", "urgent-assessment"],
+    "emergency": true,
+    "status": "published",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "demo-clinic-riverside-cats",
+    "name": "Demo Clinic: Riverside Cats",
+    "countryCode": "FR",
+    "city": "Ville Exemple",
+    "address": "3 Rue Exemple (demo only)",
+    "websiteUrl": "https://riverside-cats.example.invalid",
+    "tags": ["cats", "general-care"],
+    "services": ["routine-consultations"],
+    "status": "published",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "demo-clinic-sampleton-pets",
+    "name": "Demo Clinic: Sampleton Pets",
+    "countryCode": "DE",
+    "city": "Beispielstadt",
+    "address": "4 Beispielweg (demo only)",
+    "tags": ["cats", "dogs", "general-care"],
+    "services": ["routine-consultations", "grooming-guidance"],
+    "emergency": false,
+    "status": "published",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  }
+]

@@ -10,6 +10,8 @@ import {getFirestore, Timestamp} from "firebase-admin/firestore";
 
 import {parseContentFixtures} from "../src/content/content-fixture";
 import type {ContentDocument} from "../src/content/content";
+import {parseClinicFixtures} from "../src/clinics/clinic-fixture";
+import type {ClinicDocument} from "../src/clinics/clinic";
 import {parseGuideFixtures} from "../src/guides/guide-fixture";
 import type {GuideDocument} from "../src/guides/guide";
 import {
@@ -21,20 +23,27 @@ const contentFixturePath = resolve(
   __dirname,
   "../../../seed/fixtures/content.json",
 );
+const clinicFixturePath = resolve(
+  __dirname,
+  "../../../seed/fixtures/clinics.json",
+);
 const guideFixturePath = resolve(
   __dirname,
   "../../../seed/fixtures/guides.json",
 );
 
 async function loadFixtures(): Promise<{
+  clinics: ReturnType<typeof parseClinicFixtures>;
   content: ReturnType<typeof parseContentFixtures>;
   guides: ReturnType<typeof parseGuideFixtures>;
 }> {
-  const [contentSource, guideSource] = await Promise.all([
+  const [clinicSource, contentSource, guideSource] = await Promise.all([
+    readFile(clinicFixturePath, "utf8"),
     readFile(contentFixturePath, "utf8"),
     readFile(guideFixturePath, "utf8"),
   ]);
   return {
+    clinics: parseClinicFixtures(JSON.parse(clinicSource) as unknown),
     content: parseContentFixtures(JSON.parse(contentSource) as unknown),
     guides: parseGuideFixtures(JSON.parse(guideSource) as unknown),
   };
@@ -67,6 +76,16 @@ async function main(): Promise<void> {
     const database = getFirestore(app);
     const batch = database.batch();
 
+    for (const fixture of fixtures.clinics) {
+      const {createdAt, id, updatedAt, ...fields} = fixture;
+      const document: ClinicDocument = {
+        ...fields,
+        createdAt: Timestamp.fromDate(new Date(createdAt)),
+        updatedAt: Timestamp.fromDate(new Date(updatedAt)),
+      };
+      batch.set(database.collection("clinics").doc(id), document);
+    }
+
     for (const fixture of fixtures.content) {
       const {createdAt, id, updatedAt, ...fields} = fixture;
       const document: ContentDocument = {
@@ -93,8 +112,9 @@ async function main(): Promise<void> {
       `Firestore emulator at ${String(emulatorHost)}` :
       `remote project ${target.projectId}`;
     process.stdout.write(
-      `Seeded ${String(fixtures.content.length)} content and ` +
-      `${String(fixtures.guides.length)} guide fixtures into ${targetLabel}.\n`,
+      `Seeded ${String(fixtures.clinics.length)} clinics, ` +
+      `${String(fixtures.content.length)} content items, and ` +
+      `${String(fixtures.guides.length)} guides into ${targetLabel}.\n`,
     );
   } finally {
     await deleteApp(app);

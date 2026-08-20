@@ -138,6 +138,29 @@ async function seedGuide(
   });
 }
 
+async function seedClinic(
+  id: string,
+  status: "hidden" | "published",
+  countryCode = "GB",
+  city = "Demo City",
+  tags = ["general-care"],
+): Promise<void> {
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    const timestamp = Timestamp.fromMillis(1_700_000_000_000);
+    await setDoc(doc(context.firestore(), "clinics", id), {
+      name: `Demo Clinic: ${id}`,
+      countryCode,
+      city,
+      address: "1 Example Street (demo only)",
+      tags,
+      services: ["routine-consultations"],
+      status,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+  });
+}
+
 void describe("Firestore ownership rules", () => {
   before(async () => {
     const rules = await readFile(
@@ -389,5 +412,92 @@ void describe("Firestore ownership rules", () => {
       title: "Changed by client",
     }));
     await assertFails(deleteDoc(doc(database, "guides", "published-guide")));
+  });
+
+  void it("authenticated users can read published clinics", async () => {
+    await seedClinic("published-clinic", "published");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    await assertSucceeds(getDoc(doc(database, "clinics", "published-clinic")));
+  });
+
+  void it("hidden clinics are unavailable to ordinary clients", async () => {
+    await seedClinic("hidden-clinic", "hidden");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    await assertFails(getDoc(doc(database, "clinics", "hidden-clinic")));
+  });
+
+  void it("unauthenticated users cannot read published clinics", async () => {
+    await seedClinic("published-clinic", "published");
+    const database = testEnvironment.unauthenticatedContext().firestore();
+    await assertFails(getDoc(doc(database, "clinics", "published-clinic")));
+  });
+
+  void it("filters published clinics by country, city, and tag", async () => {
+    await seedClinic(
+      "gb-general", "published", "GB", "Demo City", ["general-care"],
+    );
+    await seedClinic(
+      "gb-urgent", "published", "GB", "Demo City", ["urgent-support"],
+    );
+    await seedClinic(
+      "fr-general", "published", "FR", "Ville Exemple", ["general-care"],
+    );
+    await seedClinic(
+      "hidden-general", "hidden", "GB", "Demo City", ["general-care"],
+    );
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    const clinics = collection(database, "clinics");
+
+    const countrySnapshot = await assertSucceeds(getDocs(query(
+      clinics,
+      where("status", "==", "published"),
+      where("countryCode", "==", "GB"),
+    )));
+    assert.deepEqual(
+      countrySnapshot.docs.map((item) => item.id).sort(),
+      ["gb-general", "gb-urgent"],
+    );
+
+    const citySnapshot = await assertSucceeds(getDocs(query(
+      clinics,
+      where("status", "==", "published"),
+      where("city", "==", "Demo City"),
+    )));
+    assert.deepEqual(
+      citySnapshot.docs.map((item) => item.id).sort(),
+      ["gb-general", "gb-urgent"],
+    );
+
+    const tagSnapshot = await assertSucceeds(getDocs(query(
+      clinics,
+      where("status", "==", "published"),
+      where("tags", "array-contains", "general-care"),
+    )));
+    assert.deepEqual(
+      tagSnapshot.docs.map((item) => item.id).sort(),
+      ["fr-general", "gb-general"],
+    );
+  });
+
+  void it("clients cannot create, update, or delete clinics", async () => {
+    await seedClinic("published-clinic", "published");
+    const database = testEnvironment.authenticatedContext(userA).firestore();
+    const timestamp = Timestamp.fromMillis(1_700_000_000_000);
+
+    await assertFails(setDoc(doc(database, "clinics", "client-clinic"), {
+      name: "Client clinic",
+      countryCode: "GB",
+      city: "Demo City",
+      address: "Client address",
+      tags: ["general-care"],
+      services: ["routine-consultations"],
+      status: "published",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    }));
+    await assertFails(updateDoc(doc(database, "clinics", "published-clinic"), {
+      name: "Changed by client",
+    }));
+    await assertFails(deleteDoc(doc(database, "clinics", "published-clinic")));
   });
 });
